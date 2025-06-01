@@ -2,20 +2,26 @@
 import { Schema, model, models } from 'mongoose';
 
 export interface IProducto {
-  nombre: string;
-  tipo: string;
-  pesoKg: number;
-  fechaCaducidad: string;
+  nombre?: string;
+  tipo?: string;
+  pesoKg?: number;
+  cantidad?: number;
+  fechaCaducidad?: string;
 }
 
 const productoSchema = new Schema<IProducto>(
   {
-    nombre: { type: String, required: true },
-    tipo: { type: String, required: true },
-    pesoKg: { type: Number, required: true },
-    fechaCaducidad: { type: String, required: true },
+    nombre: { type: String },
+    tipo: { type: String },
+    pesoKg: { type: Number },
+    cantidad: { type: Number, default: 1 }, // Cantidad por defecto es 1
+    fechaCaducidad: { type: String },
   },
   { timestamps: true }
 );
+
+if (models.Producto) {
+  delete models.Producto;
+}
 
 export const Producto = models.Producto ?? model<IProducto>('Producto', productoSchema);

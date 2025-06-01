@@ -1,52 +1,74 @@
+// src/app/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ProductoConId } from '@/types/ProductoConId';
 import ProductoForm from '@/components/ProductoForm';
+import ProductoList from '@/components/ProductoList';
+import CSVUploader from '@/components/CSVUploader';
 
 export default function HomePage() {
-  const [productos, setProductos] = useState<ProductoConId[]>([]);
+	const [productos, setProductos] = useState<ProductoConId[]>([]);
+	const [productoEditando, setProductoEditando] = useState<ProductoConId | null>(null);
 
-  const fetchProductos = () => {
-    fetch('/api/productos')
-      .then(res => res.json())
-      .then(setProductos);
-  };
+	const fetchProductos = async () => {
+		try {
+			const res = await fetch('/api/productos');
+			const data = await res.json();
+			console.log('Productos recibidos del backend:', data);
+			setProductos(data);
+		} catch (err) {
+			console.error('Error al cargar productos:', err);
+		}
+	};
 
-  const eliminarProducto = async (id: string) => {
-    const res = await fetch('/api/productos', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
+	const eliminarProducto = async (id: string) => {
+		const res = await fetch(`/api/productos?id=${id}`, {
+			method: 'DELETE',
+		});
 
-    if (res.ok) fetchProductos();
-    else alert('Error al eliminar producto');
-  };
+		if (res.ok) {
+			fetchProductos();
+		} else {
+			alert('Error al eliminar producto');
+		}
+	};
 
-  useEffect(() => {
-    fetchProductos();
-  }, []);
+	const guardarProducto = () => {
+		setProductoEditando(null);
+		fetchProductos();
+	};
 
-  return (
-    <main className="p-4">
-      <h1 className="text-xl font-bold mb-4">Inventario Congelador</h1>
+	useEffect(() => {
+		fetchProductos();
+	}, []);
 
-      <ProductoForm onCreated={fetchProductos} />
+	const exportarJSON = () => {
+		fetch('/api/exportar-json')
+			.then(res => res.blob())
+			.then(blob => {
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = 'productos.json';
+				link.click();
+				URL.revokeObjectURL(url);
+			})
+			.catch(() => alert('Error al exportar productos'));
+	};
 
-      <ul className="space-y-1">
-        {productos.map((prod) => (
-          <li key={prod._id} className="flex items-center gap-2">
-            <span>{prod.nombre} -- {prod.pesoKg} kg -- {prod.tipo} -- {prod.fechaCaducidad}</span>
-            <button
-              onClick={() => eliminarProducto(prod._id)}
-              className="text-red-600 hover:underline"
-            >
-              Eliminar
-            </button>
-          </li>
-        ))}
-      </ul>
-    </main>
-  );
+	return (
+		<main className='p-4 max-w-xl mx-auto'>
+			<h1 className='text-2xl font-bold mb-4'>Inventario del Congelador</h1>
+
+			<CSVUploader onUploaded={fetchProductos} />
+
+			<ProductoForm producto={productoEditando} onSaved={guardarProducto} onCancel={() => setProductoEditando(null)} />
+
+			<ProductoList productos={productos} onDelete={eliminarProducto} onEdit={setProductoEditando} />
+			<button onClick={exportarJSON} className='bg-blue-600 text-white px-4 py-1 m-1 rounded mb-4'>
+				Exportar JSON
+			</button>
+		</main>
+	);
 }
