@@ -26,7 +26,7 @@ export default function ProductList({ productos, onDelete, onEdit }: Readonly<Pr
         <tbody>
           {productos.map((prod) => (
             <tr key={prod._id}>
-              <td className="border px-2 py-1 truncate">{prod.nombre}</td>
+              <td className="border px-2 py-1 truncate max-w-[8rem]" title={prod.nombre}>{prod.nombre}</td>
               <td className="border px-2 py-1 text-center">{prod.cantidad}</td>
               <td className="border px-2 py-1 hidden sm:table-cell">{prod.pesoKg}</td>
               <td className="border px-2 py-1 hidden sm:table-cell">{prod.tipo}</td>
