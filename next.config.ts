@@ -1,17 +1,21 @@
-// next.config.ts
 import withPWA from 'next-pwa';
 import type { NextConfig } from 'next';
 
-const config: NextConfig = {
+const baseConfig: NextConfig = {
   reactStrictMode: true,
-  // otras opciones
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '1mb',
+    },
+  },
 };
 
 export default withPWA({
-  ...config,
+  ...baseConfig,
   pwa: {
     dest: 'public',
     register: true,
     skipWaiting: true,
+    disable: process.env.NODE_ENV === 'development',
   },
 });
